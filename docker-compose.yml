@@ -1,0 +1,38 @@
+version: '3'
+services:
+  backend:
+    build: .
+    command: nodemon .
+    volumes:
+      - .:/app
+    deploy:
+      replicas: 3
+    environment:
+      - NODE_ENV=development
+      - PORT=8884
+      - SERVICE_PORTS=8884
+      - REDIS_HOST=redis
+    networks:
+      - back-tier
+  redis:
+    image: redis
+    networks:
+      - back-tier
+  loadbalancer:
+    image: dockercloud/haproxy
+    ports:
+      - 8082:80
+    links:
+      - backend
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+    networks:
+      - front-tier
+      - back-tier
+networks:
+  front-tier:
+    driver: bridge
+  back-tier:
+    driver: bridge
+volumes:
+  db-data:
